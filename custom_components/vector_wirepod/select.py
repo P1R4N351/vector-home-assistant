@@ -1,4 +1,4 @@
-"""'Eye colour' select for one Vector. Authored-by: CPCS.
+"""'Eye colour' select for one Vector.
 
 The seven presets are the SDK's EyeColor values. 'Custom' is shown when the robot has a custom
 colour set (in the wire-pod web page or the Vector app) and choosing it puts that colour back.

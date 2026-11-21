@@ -1,4 +1,4 @@
-"""Drive, turn and stop buttons for one Vector. Authored-by: CPCS.
+"""Drive, turn and stop buttons for one Vector.
 
 Each press is one short step through controls.py at DEFAULT priority, so Vector's own cliff,
 fall and pick-up reactions still interrupt it. Stop works at any time the robot is reachable.

@@ -1,4 +1,4 @@
-"""Break one thing at a time and confirm the tests notice. Authored-by: CPCS.
+"""Break one thing at a time and confirm the tests notice.
 Each mutation must apply exactly once and change the file; a comment-only change must pass."""
 import pathlib, shutil, subprocess, sys, tempfile
 

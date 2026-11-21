@@ -1,6 +1,6 @@
 """Manual control of one Vector from Home Assistant, and the slow poll of its passed-through data.
 
-Authored-by: CPCS. controls.py decides what may be sent; this file holds behavior control while
+controls.py decides what may be sent; this file holds behavior control while
 it is used and lets it go after controls.IDLE_RELEASE_S without a command. It imports only the
 parts of Home Assistant that every platform test provides, so any platform file can use it.
 """

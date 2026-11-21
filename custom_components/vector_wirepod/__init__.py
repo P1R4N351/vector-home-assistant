@@ -1,6 +1,6 @@
 """Vector: one Vector robot in Home Assistant, through wire-pod.
 
-Authored-by: CPCS. The robot-facing policy lives in wirepod.py (camera, status and the named
+The robot-facing policy lives in wirepod.py (camera, status and the named
 exceptions) and controls.py (manual controls, sent only when a person asks).
 """
 

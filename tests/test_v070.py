@@ -1,4 +1,4 @@
-"""Tests for the 0.7.0 addition: the microphone mute calls. Authored-by: CPCS."""
+"""Tests for the 0.7.0 addition: the microphone mute calls."""
 import asyncio, sys, unittest
 from pathlib import Path
 

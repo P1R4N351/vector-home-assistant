@@ -1,4 +1,4 @@
-"""Number entity: master speaker volume slider for Vector. Authored-by: GEMINI.
+"""Number entity: master speaker volume slider for Vector.
 
 Vector stores master_volume as integer 0..5 (mute through high) in its ROBOT_SETTINGS jdoc.
 Reading /api-sdk/get_sdk_settings and writing /api-sdk/volume use Vector's standard SDK

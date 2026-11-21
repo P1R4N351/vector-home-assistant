@@ -1,4 +1,4 @@
-"""Tests for 0.12.0: the rename, passed-through robot data, and manual controls. Authored-by: CPCS."""
+"""Tests for 0.12.0: the rename, passed-through robot data, and manual controls."""
 from __future__ import annotations
 
 import asyncio

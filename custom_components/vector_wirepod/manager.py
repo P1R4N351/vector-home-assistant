@@ -1,4 +1,4 @@
-"""Carries out what the sleep cycle decides, and takes photos. Authored-by: CPCS.
+"""Carries out what the sleep cycle decides, and takes photos.
 
 sleepcycle.py decides; this file acts, through the fixed calls in wirepod.py. One robot each.
 """

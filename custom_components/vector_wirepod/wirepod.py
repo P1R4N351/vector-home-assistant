@@ -1,6 +1,6 @@
 """Passive access to one Vector's camera through wire-pod.
 
-Authored-by: CPCS. No Home Assistant imports, so the policy below is testable
+No Home Assistant imports, so the policy below is testable
 on its own.
 
 What "compliant with Vector" means here, each point enforced in this file:

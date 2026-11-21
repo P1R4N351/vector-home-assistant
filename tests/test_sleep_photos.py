@@ -1,4 +1,4 @@
-"""Tests for sleepcycle.py and photos.py (no Home Assistant needed). Authored-by: CPCS."""
+"""Tests for sleepcycle.py and photos.py (no Home Assistant needed)."""
 import sys, tempfile, unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path

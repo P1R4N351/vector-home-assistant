@@ -1,6 +1,6 @@
 """Manual controls for one Vector, sent only when a person asks for them.
 
-Authored-by: CPCS. No Home Assistant imports, so the policy below is testable on its own.
+No Home Assistant imports, so the policy below is testable on its own.
 Added 2026-11-20 at the owner's request ("maybe even manual controls"). wirepod.py stays
 read-only apart from its named exceptions; every call that moves the robot, makes it speak
 or changes its eyes is in this file, and only these:

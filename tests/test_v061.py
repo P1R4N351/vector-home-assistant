@@ -1,4 +1,4 @@
-"""Tests for 0.6.1: the wake photo is asked for more than once. Authored-by: CPCS."""
+"""Tests for 0.6.1: the wake photo is asked for more than once."""
 import asyncio, sys, unittest
 from pathlib import Path
 

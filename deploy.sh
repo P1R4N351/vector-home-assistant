@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # deploy.sh — install the vector_wirepod custom integration into a Home
 # Assistant Supervised host over ssh, then run HA's config check.
-# Authored-by: CPCS.
 #
 # Usage: deploy.sh [--host homeassistant] [--config /var/lib/homeassistant/homeassistant] [--restart]
 #   --restart  restart HA core after a clean check (needed to load new code).

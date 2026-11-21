@@ -1,5 +1,4 @@
-"""Switch entities: 'Camera allowed', 'Quiet mode', 'Photo on wake' and 'Mute microphones' for Vector.
-Authored-by: CPCS."""
+"""Switch entities: 'Camera allowed', 'Quiet mode', 'Photo on wake' and 'Mute microphones' for Vector."""
 
 from __future__ import annotations
 

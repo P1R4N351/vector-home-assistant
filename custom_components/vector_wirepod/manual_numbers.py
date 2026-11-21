@@ -1,4 +1,4 @@
-"""Head angle and lift height sliders for one Vector. Authored-by: CPCS.
+"""Head angle and lift height sliders for one Vector.
 
 The robot does not report either back through wire-pod, so each slider shows what it last set
 (assumed state) and nothing until it has been used.

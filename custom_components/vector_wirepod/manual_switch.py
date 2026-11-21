@@ -1,4 +1,4 @@
-"""'Manual control' switch for one Vector. Authored-by: CPCS.
+"""'Manual control' switch for one Vector.
 
 On while Home Assistant holds behavior control (taken by any manual control, or by this switch).
 Turning it off lets go at once; otherwise control is let go a minute after the last command.

@@ -1,4 +1,4 @@
-"""Status images, so a still never passes for live video. Authored-by: CPCS.
+"""Status images, so a still never passes for live video.
 
 The image is always the same shape as the robot's own camera frame: Vector 1.0 sends 16:9 and
 Vector 2.0 sends 4:3, and squeezing one into the other distorts the picture.

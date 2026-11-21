@@ -1,4 +1,4 @@
-"""Photo storage for Vector snapshots. Authored-by: CPCS. No Home Assistant imports.
+"""Photo storage for Vector snapshots. No Home Assistant imports.
 
 A scaffold: photos are JPEG files in one folder per robot under Home Assistant's www folder, so
 they are also reachable at /local/vector_wirepod/<serial>/<name>. The newest `keep` are kept.

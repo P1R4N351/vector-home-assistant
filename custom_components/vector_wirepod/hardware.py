@@ -1,4 +1,4 @@
-"""Which Vector this is, for how it is shown. Authored-by: CPCS. No Home Assistant imports.
+"""Which Vector this is, for how it is shown. No Home Assistant imports.
 
 Vector 1.0 was made by Anki and sends 16:9 camera frames. Vector 2.0 was made by Digital Dream
 Labs and sends 4:3 frames. The frame shape is the evidence used when a frame has been seen.

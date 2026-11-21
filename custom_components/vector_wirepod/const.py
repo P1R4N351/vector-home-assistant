@@ -1,4 +1,4 @@
-"""Constants for the Vector integration (domain vector_wirepod). Authored-by: CPCS."""
+"""Constants for the Vector integration (domain vector_wirepod)."""
 
 DOMAIN = "vector_wirepod"
 PLATFORMS = ["camera", "switch", "sensor", "binary_sensor", "button", "image", "light", "number",

@@ -1,4 +1,4 @@
-"""Sleep cycle for one Vector. Authored-by: CPCS. No Home Assistant imports, so it is testable alone.
+"""Sleep cycle for one Vector. No Home Assistant imports, so it is testable alone.
 
 What it does, in the owner's words (2026-11-19): "sleep gets to run until bot is woken, waking
 changes wake state and triggers quiet mode on a timer followed by return to triggered sleep".

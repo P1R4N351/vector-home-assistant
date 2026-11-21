@@ -1,4 +1,4 @@
-"""Cryosleep orchestration for one Vector. Authored-by: GEMINI.
+"""Cryosleep orchestration for one Vector.
 
 Pure state machine and async pod-call orchestrator with no Home Assistant imports,
 so entry, poll enforcement, fallback movement lock, and morning restore are testable alone.

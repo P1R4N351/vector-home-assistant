@@ -1,4 +1,4 @@
-"""Camera entity for one Vector, passive and shared. Authored-by: CPCS.
+"""Camera entity for one Vector, passive and shared.
 
 Frames are passed on exactly as the robot sent them, whatever their shape: Vector 1.0 sends 16:9
 and Vector 2.0 sends 4:3. Status images take the same shape as the robot's frames.

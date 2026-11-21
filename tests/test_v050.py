@@ -1,4 +1,4 @@
-"""Tests for the 0.5.0 additions that need aiohttp and Pillow. Authored-by: CPCS."""
+"""Tests for the 0.5.0 additions that need aiohttp and Pillow."""
 import asyncio, io, sys, unittest
 from pathlib import Path
 

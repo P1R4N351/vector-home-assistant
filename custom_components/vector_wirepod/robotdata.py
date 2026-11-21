@@ -1,6 +1,6 @@
 """Read-only robot data passed through to Home Assistant: lifetime stats and settings.
 
-Authored-by: CPCS. No Home Assistant imports, so it is testable on its own.
+No Home Assistant imports, so it is testable on its own.
 
 Both reads are jdoc pulls through wire-pod. They change nothing on the robot and do not
 wake a sleeping one (measured 2026-11-20: a robot answered both while reporting asleep).

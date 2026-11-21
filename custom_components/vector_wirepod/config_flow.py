@@ -1,5 +1,5 @@
 """Config flow. Validates against wire-pod's robot list, never the camera, so a
-sleeping robot can be added. Authored-by: CPCS."""
+sleeping robot can be added."""
 
 from __future__ import annotations
 

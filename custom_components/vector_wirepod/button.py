@@ -1,4 +1,4 @@
-"""Button entities for Vector actions and photo capture. Authored-by: CPCS, GEMINI.
+"""Button entities for Vector actions and photo capture.
 
 Each action sends a fixed intent or wake-word trigger through wire-pod (plus Photo capture).
 Quiet mode holds the robot still, and a robot held still ignores intents and wake triggers

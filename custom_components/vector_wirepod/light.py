@@ -1,4 +1,4 @@
-"""Light entity: the backlight of Vector's face screen. Authored-by: CPCS.
+"""Light entity: the backlight of Vector's face screen.
 
 The pod reads and writes it over the robot's own login, which only developer and OSKR robots
 have. On any other robot, or a pod without that call, the entity stays unavailable.

@@ -1,6 +1,6 @@
 """Robot data passed through as sensors: lifetime stats, settings, address, and status flags.
 
-Authored-by: CPCS. Stats, settings and the address come from the slow data coordinator in
+Stats, settings and the address come from the slow data coordinator in
 manual.py (robotdata.py reads them); the status flags come from the robot_state reading the
 main coordinator already makes, so they cost no extra request.
 """

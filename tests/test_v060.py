@@ -1,4 +1,4 @@
-"""Tests for the 0.6.0 additions: who made the robot, and the face backlight calls. Authored-by: CPCS."""
+"""Tests for the 0.6.0 additions: who made the robot, and the face backlight calls."""
 import asyncio, sys, unittest
 from pathlib import Path
 

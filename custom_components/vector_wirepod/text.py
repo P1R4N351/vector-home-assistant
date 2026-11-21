@@ -1,4 +1,4 @@
-"""'Say' text box: Vector says what is typed into it. Authored-by: CPCS."""
+"""'Say' text box: Vector says what is typed into it."""
 
 from __future__ import annotations
 

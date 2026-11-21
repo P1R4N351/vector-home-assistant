@@ -1,4 +1,4 @@
-"""Image entity: the newest stored photo from one Vector. Authored-by: CPCS."""
+"""Image entity: the newest stored photo from one Vector."""
 
 from __future__ import annotations
 
