@@ -1,4 +1,4 @@
-"""'Eye colour' select for one Vector.
+"""'Eye colour' select for one Vector. 
 
 The seven presets are the SDK's EyeColor values. 'Custom' is shown when the robot has a custom
 colour set (in the wire-pod web page or the Vector app) and choosing it puts that colour back.
@@ -52,6 +52,10 @@ class EyeColourSelect(CoordinatorEntity, SelectEntity):
         self._control = control
         self._attr_unique_id = f"{entry.data[CONF_SERIAL]}_eye_colour"
         self._attr_device_info = device_info(entry)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(self._control.add_listener(self.async_write_ha_state))
 
     def _settings(self) -> dict | None:
         data = self.coordinator.data

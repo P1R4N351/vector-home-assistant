@@ -5,12 +5,16 @@ PLATFORMS = ["camera", "switch", "sensor", "binary_sensor", "button", "image", "
              "select", "text"]
 
 CONF_WIREPOD_URL = "wirepod_url"
+CONF_FALLBACK_URL = "fallback_url"
 CONF_SERIAL = "serial"
 CONF_NAME = "name"
 CONF_STILL_REFRESH_S = "still_refresh_s"
 CONF_BATTERY_POLL_S = "battery_poll_s"
 
 DEFAULT_WIREPOD_URL = "http://escapepod.local:8080"
+FAILOVER_CONNECT_TIMEOUT_S = 5.0
+PRIMARY_RETRY_S = 120.0
+SIGNAL_RECOVERED = "vector_wirepod_recovered_{}"
 DEFAULT_STILL_REFRESH_S = 300
 MAX_STILL_REFRESH_S = 86400
 

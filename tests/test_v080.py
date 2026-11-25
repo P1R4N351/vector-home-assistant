@@ -35,12 +35,18 @@ def _install_ha_stubs() -> None:
             "async_get_still_stream": lambda *a, **kw: None,
         },
         "homeassistant.config_entries": {"ConfigEntry": _stub_class("ConfigEntry")},
-        "homeassistant.core": {"HomeAssistant": _stub_class("HomeAssistant")},
+        "homeassistant.core": {
+            "HomeAssistant": _stub_class("HomeAssistant"),
+            "callback": lambda fn: (setattr(fn, "_hass_callback", True) or fn),
+        },
         "homeassistant.exceptions": {"HomeAssistantError": _stub_class("HomeAssistantError", True)},
         "homeassistant.helpers": {},
         "homeassistant.helpers.aiohttp_client": {"async_get_clientsession": lambda *a, **kw: None},
         "homeassistant.helpers.device_registry": {"DeviceInfo": dict},
-        "homeassistant.helpers.dispatcher": {"async_dispatcher_send": lambda *a, **kw: None},
+        "homeassistant.helpers.dispatcher": {
+            "async_dispatcher_send": lambda *a, **kw: None,
+            "async_dispatcher_connect": lambda *a, **kw: (lambda: None),
+        },
         "homeassistant.helpers.entity_platform": {
             "AddConfigEntryEntitiesCallback": _stub_class("AddConfigEntryEntitiesCallback"),
         },

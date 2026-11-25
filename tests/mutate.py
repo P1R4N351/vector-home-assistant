@@ -102,12 +102,25 @@ MUTATIONS = [
     ('unknown flag shown as off', 'extras.py', '        return value if isinstance(value, bool) else None', '        return bool(value)', True),
     ('flags shown while unreachable', 'extras.py', '        if not data.get("robot_reachable") or not isinstance(state, dict):', '        if not isinstance(state, dict):', True),
     ('eye preset off by one', 'select.py', '{"color": EYE_PRESETS.index(option)}', '{"color": EYE_PRESETS.index(option) + 1}', True),
+    ("eye select ignores cryosleep listener", "select.py", "self.async_on_remove(self._control.add_listener(self.async_write_ha_state))", "pass", True),
     ('stop unavailable in cryosleep', 'manual_buttons.py', '    @property\n    def available(self) -> bool:\n        return True', '    @property\n    def available(self) -> bool:\n        return not self._control.displaced()', True),
+    ("control 0.13.0", "failover.py", "FAILOVER_STATUSES = (502, 504)", "FAILOVER_STATUSES = (502, 504)  # neutral", False),
+    ("boot uses blocking first_refresh", "__init__.py", "    await coordinator.async_refresh()", "    await coordinator.async_config_entry_first_refresh()", True),
+    ("failover ignores fallback on outage", "failover.py", "            except (aiohttp.ClientError, TimeoutError) as exc:\n                last_exc = exc\n                if has_next:\n                    continue", "            except (aiohttp.ClientError, TimeoutError) as exc:\n                last_exc = exc\n                if False:\n                    continue", True),
+    ("failover never probes primary again", "failover.py", "        if on_fallback and (self._clock() - self._fallback_since) < self._primary_retry_s:", "        if on_fallback:", True),
+    ("recovery dispatcher signal suppressed", "__init__.py", "    if not was_reachable:\n        async_dispatcher_send(hass, SIGNAL_RECOVERED.format(serial))", "    if False:\n        async_dispatcher_send(hass, SIGNAL_RECOVERED.format(serial))", True),
+    ("quiet desired lost across unavailable", "switch.py", "        elif last is not None and isinstance(last.attributes.get(\"desired\"), bool):\n            want = last.attributes[\"desired\"]", "        elif False:\n            want = False", True),
+    ("say does not restore quiet mode", "manual.py", "            await self.manager.set_quiet(True)", "            pass", True),
+    ("say sends empty clear text", "text.py", "        if isinstance(value, str) and not value.strip():", "        if False:", True),
+    ("light recovery drops callback decorator", "light.py", "        if getattr(self, \"hass\", None) is not None:\n            @callback\n            def _on_recovered", "        if getattr(self, \"hass\", None) is not None:\n            def _on_recovered", True),
+    ("number recovery drops callback decorator", "number.py", "        if getattr(self, \"hass\", None) is not None:\n            @callback\n            def _on_recovered", "        if getattr(self, \"hass\", None) is not None:\n            def _on_recovered", True),
+    ("mic switch recovery drops callback decorator", "switch.py", "        if getattr(self, \"hass\", None) is not None:\n            @callback\n            def _on_recovered", "        if getattr(self, \"hass\", None) is not None:\n            def _on_recovered", True),
+    ("extras recovery drops callback decorator", "manual.py", "        @callback\n        def _on_recovered() -> None:", "        def _on_recovered() -> None:", True),
 ]
 
 
 def run_tests(root: pathlib.Path) -> bool:
-    proc = subprocess.run([sys.executable, "-m", "unittest", "test_sleep_photos", "test_v050", "test_v060", "test_v061", "test_v070", "test_v080", "test_v090", "test_v0100", "test_v0110", "test_v0111", "test_v0120"],
+    proc = subprocess.run([sys.executable, "-m", "unittest", "test_sleep_photos", "test_v050", "test_v060", "test_v061", "test_v070", "test_v080", "test_v090", "test_v0100", "test_v0110", "test_v0111", "test_v0120", "test_v0130"],
                           cwd=root / "tests", capture_output=True, text=True, timeout=300)
     return proc.returncode == 0
 

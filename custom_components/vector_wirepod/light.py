@@ -1,4 +1,4 @@
-"""Light entity: the backlight of Vector's face screen.
+"""Light entity: the backlight of Vector's face screen. 
 
 The pod reads and writes it over the robot's own login, which only developer and OSKR robots
 have. On any other robot, or a pod without that call, the entity stays unavailable.
@@ -15,12 +15,13 @@ import aiohttp
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .camera import device_info
-from .const import CONF_SERIAL
+from .const import CONF_SERIAL, SIGNAL_RECOVERED
 from .cryosleep import bind_cryosleep_entity, cryosleep_displaced, guard_not_cryosleep
 from .wirepod import BACKLIGHT_MAX, WirePodError, get_backlight, set_backlight
 
@@ -71,6 +72,13 @@ class FaceBacklight(LightEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         bind_cryosleep_entity(self, getattr(self._data, "manager", None), refresh_on_exit=True)
+        if getattr(self, "hass", None) is not None:
+            @callback
+            def _on_recovered() -> None:
+                self.async_schedule_update_ha_state(True)
+
+            self.async_on_remove(async_dispatcher_connect(
+                self.hass, SIGNAL_RECOVERED.format(self._data.serial), _on_recovered))
 
     @property
     def is_on(self) -> bool | None:

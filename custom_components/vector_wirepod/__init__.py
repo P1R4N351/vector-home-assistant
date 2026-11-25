@@ -16,12 +16,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (BATTERY_POLL_S, BATTERY_TIMEOUT_S, CONF_BATTERY_POLL_S,
-                    CONF_SERIAL, CONF_WIREPOD_URL, CYCLE_POLL_S, DOMAIN,
-                    MIN_BATTERY_POLL_S, PLATFORMS)
+                    CONF_FALLBACK_URL, CONF_SERIAL, CONF_WIREPOD_URL, CYCLE_POLL_S,
+                    DOMAIN, FAILOVER_CONNECT_TIMEOUT_S, MIN_BATTERY_POLL_S,
+                    PLATFORMS, PRIMARY_RETRY_S, SIGNAL_RECOVERED)
 from . import hardware
+from .failover import FailoverSession
 from .manager import VectorManager
 from .sleepcycle import GOING, IDLE
 from .wirepod import (CameraHub, HubConfig, WirePodError, get_battery,
@@ -62,7 +65,17 @@ async def _read_robot_state(session: aiohttp.ClientSession, base: str, serial: s
         return None
 
 
-def _make_coordinator(hass: HomeAssistant, entry: ConfigEntry, session: aiohttp.ClientSession,
+def _handle_pod_unreachable(coordinator: DataUpdateCoordinator, hub: CameraHub,
+                            manager: VectorManager, poll_s: int, exc: Exception) -> None:
+    """Record pod outage, keep Cryosleep state machine synced, and keep fast recovery polling."""
+    hub.set_robot_reachable(False, "wire-pod unreachable")
+    manager.observe(None, robot_reachable=False)
+    busy = manager.cycle.phase != IDLE or manager.cryosleep.enabled
+    coordinator.update_interval = timedelta(seconds=min(poll_s, CYCLE_POLL_S) if busy else poll_s)
+    raise UpdateFailed(f"wire-pod unreachable: {exc}") from exc
+
+
+def _make_coordinator(hass: HomeAssistant, entry: ConfigEntry, session: object,
                       hub: CameraHub, manager: VectorManager) -> DataUpdateCoordinator:
     assert hass is not None and entry is not None
     assert session is not None and hub is not None and manager is not None
@@ -71,14 +84,14 @@ def _make_coordinator(hass: HomeAssistant, entry: ConfigEntry, session: aiohttp.
     poll_s = max(MIN_BATTERY_POLL_S, int(entry.options.get(CONF_BATTERY_POLL_S, BATTERY_POLL_S)))
 
     async def _update() -> dict:
+        was_reachable = bool(isinstance(coordinator.data, dict) and coordinator.data.get("robot_reachable"))
         quiet: dict | None = None
         try:
             quiet = await get_quiet_mode(session, base, serial)
         except WirePodError as exc:
             _LOGGER.debug("quiet_mode poll error for %s: %s", serial, exc)
         except (aiohttp.ClientError, TimeoutError) as exc:
-            hub.set_robot_reachable(False, "wire-pod unreachable")
-            raise UpdateFailed(f"wire-pod unreachable: {exc}") from exc
+            _handle_pod_unreachable(coordinator, hub, manager, poll_s, exc)
         try:
             data = await get_battery(session, base, serial, BATTERY_TIMEOUT_S)
         except WirePodError as exc:
@@ -86,34 +99,53 @@ def _make_coordinator(hass: HomeAssistant, entry: ConfigEntry, session: aiohttp.
             manager.observe(None, robot_reachable=False)
             return {"robot_reachable": False, "error": str(exc)[:200], "quiet_mode": quiet}
         except (aiohttp.ClientError, TimeoutError) as exc:
-            hub.set_robot_reachable(False, "wire-pod unreachable")
-            raise UpdateFailed(f"wire-pod unreachable: {exc}") from exc
-        hub.set_robot_reachable(True)
-        _sync_device_model(hass, entry.entry_id, serial, hub)
-        data["robot_reachable"] = True
-        data["quiet_mode"] = quiet
-        data["robot_state"] = await _read_robot_state(session, base, serial)
-        coordinator.data = data            # the cycle's actions read quiet mode from here
-        manager.observe(data["robot_state"], robot_reachable=True)
-        state = data["robot_state"]
-        hub.set_robot_asleep(bool(state and state.get("asleep")) or manager.cycle.phase == GOING or manager.cryosleep.enabled)
-        busy = manager.cycle.phase != IDLE or manager.cryosleep.enabled
-        coordinator.update_interval = timedelta(seconds=min(poll_s, CYCLE_POLL_S) if busy else poll_s)
-        return data
+            _handle_pod_unreachable(coordinator, hub, manager, poll_s, exc)
+        return await _finish_reachable_poll(
+            hass, coordinator, hub, manager, session, entry.entry_id, base, serial,
+            data, quiet, poll_s, was_reachable)
     coordinator = DataUpdateCoordinator(hass, _LOGGER, config_entry=entry, name=f"{DOMAIN} {serial}",
                                         update_interval=timedelta(seconds=poll_s), update_method=_update)
     manager.coordinator = coordinator
     return coordinator
 
 
+async def _finish_reachable_poll(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
+                                 hub: CameraHub, manager: VectorManager, session: object,
+                                 entry_id: str, base: str, serial: str, data: dict,
+                                 quiet: dict | None, poll_s: int, was_reachable: bool) -> dict:
+    """Update hub, Cryosleep/cycle state, and notify polling entities on outage recovery."""
+    hub.set_robot_reachable(True)
+    _sync_device_model(hass, entry_id, serial, hub)
+    data["robot_reachable"] = True
+    data["quiet_mode"] = quiet
+    data["robot_state"] = await _read_robot_state(session, base, serial)
+    coordinator.data = data            # the cycle's actions read quiet mode from here
+    manager.observe(data["robot_state"], robot_reachable=True)
+    state = data["robot_state"]
+    hub.set_robot_asleep(bool(state and state.get("asleep")) or manager.cycle.phase == GOING or manager.cryosleep.enabled)
+    busy = manager.cycle.phase != IDLE or manager.cryosleep.enabled
+    coordinator.update_interval = timedelta(seconds=min(poll_s, CYCLE_POLL_S) if busy else poll_s)
+    if not was_reachable:
+        async_dispatcher_send(hass, SIGNAL_RECOVERED.format(serial))
+    return data
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert hass is not None and entry is not None
-    session = async_get_clientsession(hass)
+    raw_session = async_get_clientsession(hass)
+    fallback_url = (entry.options.get(CONF_FALLBACK_URL) or entry.data.get(CONF_FALLBACK_URL) or "").strip()
+    session = FailoverSession(
+        raw_session,
+        entry.data[CONF_WIREPOD_URL],
+        fallback_url,
+        primary_retry_s=PRIMARY_RETRY_S,
+        connect_timeout_s=FAILOVER_CONNECT_TIMEOUT_S,
+    )
     hub = CameraHub(session, HubConfig(base_url=entry.data[CONF_WIREPOD_URL],
                                        serial=entry.data[CONF_SERIAL]))
     manager = VectorManager(hass, entry, session, hub)
     coordinator = _make_coordinator(hass, entry, session, hub, manager)
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
     entry.runtime_data = VectorData(
         hub=hub,
         coordinator=coordinator,

@@ -265,9 +265,18 @@ class _Manager:
         self.cryosleep = _Cryo()
         self.cancelled: list[str] = []
         self.listeners: list = []
+        self.quiet_calls: list[bool] = []
+        self.changed_calls = 0
 
     def quiet_is_on(self) -> bool:
         return self.quiet
+
+    async def set_quiet(self, on: bool) -> None:
+        self.quiet_calls.append(on)
+        self.quiet = on
+
+    def _changed(self) -> None:
+        self.changed_calls += 1
 
     def cancel_cycle(self, why: str) -> None:
         self.cancelled.append(why)
@@ -556,17 +565,76 @@ class EntityTests(unittest.TestCase):
             say = TEXT.SayText(entry, control)
             say.async_write_ha_state = lambda: None     # not added to a running Home Assistant here
             await say.async_set_value("  hello there  ")
+            first_state = (say.native_value, say.extra_state_attributes["last_said"])
+            await say.async_set_value("hello there")
+            await say.async_set_value("   ")
+            await say.async_set_value("")
+            calls_after_clear = list(pod.paths())
+            # Quiet mode is lifted temporarily for Say, then released & restored even on error.
+            mgr = entry.runtime_data.manager
+            mgr.quiet = True
+            await say.async_set_value("during quiet")
+            quiet_after_ok = (mgr.quiet, list(mgr.quiet_calls), control.hold.held)
+            pod.answers["/api-sdk/say_text"] = (500, "boom")
+            try:
+                await say.async_set_value("fail while quiet")
+                quiet_err = None
+            except HA_ERROR as exc:
+                quiet_err = str(exc)
+            quiet_after_err = (mgr.quiet, list(mgr.quiet_calls), control.hold.held, quiet_err)
+            pod.answers.pop("/api-sdk/say_text", None)
+            mgr.quiet = False
+            mgr.cryosleep.enabled = True
+            try:
+                await say.async_set_value("blocked in cryo")
+                cryo_err = None
+            except HA_ERROR as exc:
+                cryo_err = str(exc)
+            mgr.cryosleep.enabled = False
             try:
                 await say.async_set_value("bad\x07")
-                err = None
+                bad_err = None
             except HA_ERROR as exc:
-                err = str(exc)
-            return pod, say.native_value, err
-        pod, value, err = asyncio.run(_with_pod(body))
-        self.assertEqual(pod.paths(), ["assume_behavior_control", "say_text"])
+                bad_err = str(exc)
+            return pod, first_state, calls_after_clear, quiet_after_ok, quiet_after_err, cryo_err, bad_err, say.extra_state_attributes
+        pod, first_state, calls_after_clear, quiet_after_ok, quiet_after_err, cryo_err, bad_err, attrs = asyncio.run(_with_pod(body))
+        self.assertEqual(first_state, ("", "hello there"))
+        self.assertEqual(calls_after_clear, ["assume_behavior_control", "say_text", "say_text"])
         self.assertEqual(pod.seen[1][1]["text"], "hello there")
-        self.assertEqual(value, "hello there")
-        self.assertIn("control characters", err)
+        self.assertEqual(pod.seen[2][1]["text"], "hello there")
+        self.assertEqual(quiet_after_ok, (True, [False, True], False))
+        self.assertEqual(quiet_after_err[:3], (True, [False, True, False, True], False))
+        self.assertIn("wire-pod did not take", quiet_after_err[3])
+        self.assertIn("Cryosleep", cryo_err)
+        self.assertIn("control characters", bad_err)
+        self.assertEqual(attrs["last_said"], "during quiet")
+
+    def test_eye_select_tracks_cryosleep_displacement(self) -> None:
+        async def body():
+            extras = types.SimpleNamespace(data={"settings": ROBOTDATA.normalize_settings(DEMO_SETTINGS)},
+                                           last_update_success=True,
+                                           async_add_listener=lambda *a, **kw: (lambda: None))
+            entry = self._entry(coord_data={"robot_reachable": True})
+            control = MANUAL.ensure_control(_FakeHass(), entry)
+            sel = SELECT.EyeColourSelect(entry, control, extras)
+            writes, removers = [], []
+            sel.async_write_ha_state = lambda: writes.append(sel.available)
+            sel.async_on_remove = removers.append
+            await sel.async_added_to_hass()
+            self.assertGreaterEqual(len(removers), 1)
+            self.assertTrue(sel.available)
+            entry.runtime_data.manager.cryosleep.enabled = True
+            for cb in list(entry.runtime_data.manager.listeners):
+                cb()
+            self.assertEqual(writes, [False])
+            for rem in removers:
+                rem()
+            writes.clear()
+            entry.runtime_data.manager.cryosleep.enabled = False
+            for cb in list(entry.runtime_data.manager.listeners):
+                cb()
+            self.assertEqual(writes, [])
+        asyncio.run(body())
 
 
 if __name__ == "__main__":

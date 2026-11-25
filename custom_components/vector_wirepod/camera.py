@@ -1,4 +1,4 @@
-"""Camera entity for one Vector, passive and shared.
+"""Camera entity for one Vector, passive and shared. 
 
 Frames are passed on exactly as the robot sent them, whatever their shape: Vector 1.0 sends 16:9
 and Vector 2.0 sends 4:3. Status images take the same shape as the robot's frames.
@@ -101,6 +101,7 @@ class VectorCamera(CoordinatorEntity, Camera, RestoreEntity):
             "last_frame_age_s": None if age is None else round(age, 1),
             "next_start_in_s": round(hub.retry_in_s(), 1),
             "dropped_frames": hub.dropped_frames,
+            "active_pod_url": getattr(self._entry.runtime_data.session, "active_url", self._entry.runtime_data.base_url),
             "robot_reachable": data.get("robot_reachable"),
             "on_charger": data.get("is_on_charger_platform"),
             "charging": data.get("is_charging"),

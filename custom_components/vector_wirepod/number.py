@@ -1,4 +1,4 @@
-"""Number entity: master speaker volume slider for Vector.
+"""Number entity: master speaker volume slider for Vector. 
 
 Vector stores master_volume as integer 0..5 (mute through high) in its ROBOT_SETTINGS jdoc.
 Reading /api-sdk/get_sdk_settings and writing /api-sdk/volume use Vector's standard SDK
@@ -15,12 +15,13 @@ import aiohttp
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .camera import device_info
-from .const import CONF_SERIAL
+from .const import CONF_SERIAL, SIGNAL_RECOVERED
 from .cryosleep import bind_cryosleep_entity, cryosleep_displaced, guard_not_cryosleep
 from .manual_numbers import manual_numbers
 from .wirepod import (
@@ -85,6 +86,13 @@ class VectorVolumeNumber(NumberEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         bind_cryosleep_entity(self, getattr(self._data, "manager", None), refresh_on_exit=True)
+        if getattr(self, "hass", None) is not None:
+            @callback
+            def _on_recovered() -> None:
+                self.async_schedule_update_ha_state(True)
+
+            self.async_on_remove(async_dispatcher_connect(
+                self.hass, SIGNAL_RECOVERED.format(self._data.serial), _on_recovered))
 
     @property
     def native_value(self) -> float | None:

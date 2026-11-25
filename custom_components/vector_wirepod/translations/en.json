@@ -5,7 +5,8 @@
         "title": "wire-pod server",
         "description": "Address of the wire-pod server that the Vector is paired with. Only its robot list is read here; nothing is sent to a robot.",
         "data": {
-          "wirepod_url": "wire-pod URL"
+          "wirepod_url": "wire-pod URL",
+          "fallback_url": "Fallback wire-pod URL (optional)"
         }
       },
       "robot": {
@@ -18,9 +19,10 @@
       },
       "reconfigure": {
         "title": "Update wire-pod server",
-        "description": "Change the wire-pod URL for this robot without removing existing entities or history.",
+        "description": "Change the wire-pod URL or optional fallback URL for this robot without removing existing entities or history.",
         "data": {
-          "wirepod_url": "wire-pod URL"
+          "wirepod_url": "wire-pod URL",
+          "fallback_url": "Fallback wire-pod URL (optional)"
         }
       }
     },
@@ -43,9 +45,13 @@
         "data": {
           "still_refresh_s": "Minimum seconds between thumbnail refreshes",
           "battery_poll_s": "Battery and charger poll interval (seconds)",
-          "quiet_hold_s": "Quiet time after a wake, before sleep is asked for again (seconds)"
+          "quiet_hold_s": "Quiet time after a wake, before sleep is asked for again (seconds)",
+          "fallback_url": "Fallback wire-pod URL (optional)"
         }
       }
+    },
+    "error": {
+      "invalid_url": "The URL must start with http:// or https://."
     }
   },
   "entity": {

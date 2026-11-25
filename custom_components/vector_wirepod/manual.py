@@ -15,12 +15,14 @@ from datetime import timedelta
 
 import aiohttp
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import controls, robotdata
-from .const import DOMAIN
-from .cryosleep import cryosleep_displaced
+from .const import DOMAIN, QUIET_SETTLE_S, SIGNAL_RECOVERED
+from .cryosleep import cryosleep_displaced, guard_not_cryosleep
 from .wirepod import WirePodError, get_sdk_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,6 +116,44 @@ class ManualControl:
                 return {"ok": True} if path is None else await self._send(path, params)
             finally:
                 self._schedule_release()
+                self._notify()
+
+    async def _restore_quiet_after_say(self) -> None:
+        self._cancel_timer()
+        if self.hold.end():
+            try:
+                await controls.send(self._session, self._base, self.serial, controls.PATH_RELEASE)
+            except FAILURES as exc:
+                _LOGGER.warning("%s: releasing say control failed: %s", self.serial, exc)
+        try:
+            await self.manager.set_quiet(True)
+        except FAILURES as exc:
+            _LOGGER.warning("%s: restoring quiet mode after say failed: %s", self.serial, exc)
+        changed = getattr(self.manager, "_changed", None)
+        if callable(changed):
+            changed()
+
+    async def say(self, text: str) -> dict:
+        """Speak text aloud; temporarily lift Quiet mode and restore it when done."""
+        async with self._lock:
+            guard_not_cryosleep(self.manager, HomeAssistantError)
+            if not self._reachable():
+                raise HomeAssistantError("Vector is not reachable through wire-pod")
+            was_quiet = bool(self.manager.quiet_is_on())
+            if was_quiet:
+                try:
+                    await self.manager.set_quiet(False)
+                except FAILURES as exc:
+                    raise HomeAssistantError(f"Quiet mode could not be lifted: {exc}") from exc
+                await self._sleep(QUIET_SETTLE_S)
+            try:
+                await self._take()
+                return await self._send(controls.PATH_SAY, {"text": text})
+            finally:
+                if was_quiet:
+                    await self._restore_quiet_after_say()
+                else:
+                    self._schedule_release()
                 self._notify()
 
     async def setting(self, path: str, params: dict) -> dict:
@@ -218,5 +258,15 @@ def ensure_extras(hass, entry) -> DataUpdateCoordinator:
         data.extras = DataUpdateCoordinator(
             hass, _LOGGER, config_entry=entry, name=f"{DOMAIN} {data.serial} data",
             update_interval=timedelta(seconds=EXTRAS_POLL_S), update_method=_update)
+        @callback
+        def _on_recovered() -> None:
+            hass.async_create_background_task(
+                data.extras.async_request_refresh(), f"{DOMAIN} data recover {data.serial}")
+
+        unsub = async_dispatcher_connect(
+            hass, SIGNAL_RECOVERED.format(data.serial), _on_recovered)
+        on_unload = getattr(entry, "async_on_unload", None)
+        if callable(on_unload):
+            on_unload(unsub)
         hass.async_create_background_task(data.extras.async_refresh(), f"{DOMAIN} data {data.serial}")
     return data.extras

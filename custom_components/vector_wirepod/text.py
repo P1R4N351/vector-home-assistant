@@ -26,7 +26,7 @@ class SayText(TextEntity):
     _attr_name = "Say"
     _attr_icon = "mdi:account-voice"
     _attr_mode = TextMode.TEXT
-    _attr_native_min = 1
+    _attr_native_min = 0
     _attr_native_max = controls.SAY_MAX_CHARS
 
     def __init__(self, entry: ConfigEntry, control: ManualControl) -> None:
@@ -44,14 +44,21 @@ class SayText(TextEntity):
         return not self._control.displaced()
 
     @property
-    def native_value(self) -> str | None:
-        return self._control.last_said
+    def native_value(self) -> str:
+        return ""
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        return {"last_said": self._control.last_said}
 
     async def async_set_value(self, value: str) -> None:
+        if isinstance(value, str) and not value.strip():
+            self.async_write_ha_state()
+            return
         try:
             text = controls.check_say_text(value)
         except ValueError as exc:
             raise HomeAssistantError(str(exc)) from exc
-        await self._control.command(controls.PATH_SAY, {"text": text})
+        await self._control.say(text)
         self._control.last_said = text
         self.async_write_ha_state()

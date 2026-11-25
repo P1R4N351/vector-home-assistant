@@ -45,7 +45,7 @@ Units are from the robot's own source (`engine/components/robotStatsTracker.cpp`
 | Dock, Sleep, Go to sleep, Explore, Listen for beat, Fetch cube, Trigger wake word (buttons) | Fixed wire-pod intents. Sleep starts a repeating cycle: sleep until woken, quiet mode for a set time (default 600 s), then sleep again. |
 | Quiet mode (switch) | Holds the robot still and quiet. |
 | Volume (number) | Master volume, 0 (mute) to 5 (high). |
-| Eye colour (select) | The seven preset colours, or Custom when the robot has a custom colour, which choosing it restores. |
+| Eye colour (select) | The seven preset colours, or Custom when the robot has a custom colour, which choosing it restores. Updates availability immediately when Cryosleep toggles. |
 | Face backlight (light), Mute microphones (switch) | Need wire-pod to log in to the robot (developer robots). Changing the microphone mute restarts the robot's programs (about 20 s). |
 | Cryosleep (switch) | For overnight automations: turns off quiet mode and the controls above, mutes voice requests and the speaker without a restart, puts the robot to sleep, turns the face backlight off, keeps it asleep, and restores everything when switched off. |
 
@@ -56,7 +56,7 @@ Units are from the robot's own source (`engine/components/robotStatsTracker.cpp`
 | Drive forward, Drive backward, Turn left, Turn right (buttons) | One step each: 100 mm forward, 50 mm back, or 45° on the spot. |
 | Stop (button) | Stops the motors. Available whenever the robot is reachable. |
 | Head angle (−22° to 45°), Lift height (0 to 100 %) (numbers) | Show the last value set; wire-pod does not report either back. |
-| Say (text) | The robot says the text, up to 255 characters. |
+| Say (text) | The robot says the text, up to 255 characters. Temporarily lifts Quiet mode while speaking and restores it afterwards (blocked during Cryosleep); clears input after sending and records `last_said` in attributes. |
 | Manual control (switch) | On while Home Assistant holds control of the robot. Off releases it at once. |
 
 How the manual controls behave:
@@ -66,14 +66,26 @@ How the manual controls behave:
 - Only fixed endpoints with range-checked arguments are sent.
 - The first command takes control and ends any running sleep cycle. Control is released 60 s
   after the last command, because holding it keeps the robot awake.
-- The controls are refused during Quiet mode and Cryosleep, except Stop. Turning Cryosleep on
+- Manual motion controls are refused during Quiet mode and Cryosleep (except Stop, which always runs;
+  and Say, which temporarily lifts Quiet mode while blocked during Cryosleep). Turning Cryosleep on
   releases control.
 - Refusals from wire-pod (on the charger, an edge ahead, something in the way, being held) are
   shown as errors in plain words.
 
+**Outage resilience and failover (`0.13.0–0.13.1`)**
+
+- Non-blocking startup (`async_refresh()`) lets entities register cleanly even when wire-pod is
+  unreachable at Home Assistant boot.
+- Optional `fallback_url` in setup, reconfigure, and options fails over automatically on HTTP `502`/`504`,
+  connection errors, and timeouts (`5.0 s` connect timeout), re-probing the primary server every `120 s`.
+  The camera exposes `active_pod_url`.
+- Event-loop `@callback` recovery handlers refresh polling entities (`Face backlight`, `Volume`,
+  `Mute microphones`, `Quiet mode`, robot data) immediately on reconnect, and `Quiet mode` preserves
+  its `desired` attribute across `unavailable` periods.
+
 ## Requirements
 
-- Home Assistant. Tested with 2026.11.2.
+- Home Assistant. Tested with 2026.11.3.
 - A wire-pod server that the robot is paired with, reachable from Home Assistant over HTTP.
 
 Stock wire-pod provides the camera, battery, intents, wake word, volume, robot data, eye colour,
