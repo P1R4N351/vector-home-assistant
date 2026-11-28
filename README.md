@@ -14,7 +14,7 @@ Not affiliated with Anki or Digital Dream Labs.
 |---|---|
 | Camera | Live view and thumbnails in the robot's own frame shape (16:9 on Vector 1.0, 4:3 on 2.0). One wire-pod stream is shared by every viewer and closed when nobody watches. A sleeping robot sends no frames; the camera then shows its status instead of waking it. |
 | Camera allowed (switch) | Off closes the stream and keeps it closed, for runs where something else needs the camera. |
-| Take photo (button), Photo on wake (switch), Last photo (image) | Photos are kept in `www/vector_wirepod/<serial>/` (newest 50); each fires the event `vector_wirepod_photo`. |
+| Take photo (button), Photo on wake (switch), Last photo (image) | Photos are kept privately outside `www` in `<config>/vector_wirepod/<serial>/` (newest 50) and served authenticated through the `Last photo` image entity (`entity_picture`); each fires `vector_wirepod_photo`. |
 
 **Status**
 
@@ -107,8 +107,9 @@ automatically.
 
 ## Install
 
-- **HACS:** add this repository as a custom repository (type Integration), install **Vector**,
-  restart Home Assistant.
+- **HACS:** open HACS → **Integrations**, search for **Vector**, download **Vector**, and
+  restart Home Assistant. If it is not listed yet, add `https://github.com/P1R4N351/vector-home-assistant`
+  as a custom repository (category **Integration**), install **Vector**, and restart.
 - **By hand:** copy `custom_components/vector_wirepod/` (with its `brand/` folder) into the
   `custom_components/` folder of your configuration, then restart.
 - **Supervised host over SSH:** `./deploy.sh --host <host> --restart`.

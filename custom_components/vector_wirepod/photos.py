@@ -1,7 +1,8 @@
 """Photo storage for Vector snapshots. No Home Assistant imports.
 
-A scaffold: photos are JPEG files in one folder per robot under Home Assistant's www folder, so
-they are also reachable at /local/vector_wirepod/<serial>/<name>. The newest `keep` are kept.
+Photos are stored as JPEG files in one private folder per robot under Home Assistant's
+config directory (<config>/vector_wirepod/<serial>/<name>), outside www, and served authenticated
+through the image entity. The newest `keep` are kept.
 Blocking file work; call through hass.async_add_executor_job.
 """
 
@@ -21,7 +22,7 @@ REASON = re.compile(r"[a-z]{1,12}")
 
 def photo_dir(config_dir: str, serial: str) -> Path:
     assert serial.isalnum(), "serial must be alphanumeric"
-    return Path(config_dir) / "www" / "vector_wirepod" / serial.lower()
+    return Path(config_dir) / "vector_wirepod" / serial.lower()
 
 
 def is_jpeg(data: bytes) -> bool:

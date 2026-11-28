@@ -87,8 +87,9 @@ class PhotoTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_dir_is_per_robot_under_www(self):
-        self.assertTrue(str(self.dir).endswith("www/vector_wirepod/0dd1cafe"))
+    def test_dir_is_per_robot_outside_www(self):
+        self.assertTrue(str(self.dir).endswith("vector_wirepod/0dd1cafe"))
+        self.assertNotIn("www", self.dir.parts)
         with self.assertRaises(AssertionError):
             photos.photo_dir(self.tmp.name, "../etc")
 

@@ -122,6 +122,7 @@ MUTATIONS = [
     ("manual number ignores restored state", "manual_numbers.py", "            if val is not None:\n                self._apply_restored(val)", "            if False:\n                self._apply_restored(val)", True),
     ("say text ignores restored last_said", "text.py", "            if isinstance(prev, str) and prev.strip():\n                self._control.last_said = prev", "            if False:\n                self._control.last_said = prev", True),
     ("service accepts ambiguous multi-robot call", "services.py", "    if len(entries) == 1:\n        return entries[0]", "    if entries:\n        return entries[0]", True),
+    ("photo_dir puts photos back under www", "photos.py", 'return Path(config_dir) / "vector_wirepod" / serial.lower()', 'return Path(config_dir) / "www" / "vector_wirepod" / serial.lower()', True),
 ]
 
 

@@ -346,8 +346,7 @@ class VectorManager:
             photos.save_photo, self.photo_dir, frame, reason, None, PHOTO_KEEP)
         self.last_photo = path
         self.hass.bus.async_fire(EVENT_PHOTO, {
-            "serial": self.serial, "reason": reason, "file": path.name,
-            "url": f"/local/{DOMAIN}/{self.serial.lower()}/{path.name}"})
+            "serial": self.serial, "reason": reason, "file": path.name})
         return path
 
     async def _fresh_frame(self) -> bytes | None:

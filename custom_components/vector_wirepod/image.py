@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import photos
 from .camera import device_info
-from .const import CONF_SERIAL, DOMAIN, SIGNAL_PHOTO
+from .const import CONF_SERIAL, SIGNAL_PHOTO
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
@@ -55,11 +55,9 @@ class VectorLastPhoto(ImageEntity):
     @property
     def extra_state_attributes(self) -> dict:
         path = self._path
-        serial = self._manager.serial.lower()
         return {
             "file": path.name if path else None,
             "reason": photos.reason_of(path) if path else None,
-            "url": f"/local/{DOMAIN}/{serial}/{path.name}" if path else None,
             "stored_photos": self._count,
             "last_error": self._manager.last_photo_error,
         }

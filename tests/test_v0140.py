@@ -7,11 +7,24 @@ import types
 import unittest
 from unittest import mock
 
+import sys
+import tempfile
+from pathlib import Path
 from aiohttp import web
 
+from test_v0100 import MODS
 from test_v0120 import PKG, SERIAL, _install_extra_stubs
 
 _install_extra_stubs()
+if "homeassistant.components.image" not in sys.modules:
+    _eb = MODS["switch"].SwitchEntity.__mro__[1]
+    _img_cls = type("ImageEntity", (_eb,), {"__init__": lambda self, hass=None: None})
+    _img_mod = types.ModuleType("homeassistant.components.image")
+    _img_mod.ImageEntity = _img_cls
+    sys.modules["homeassistant.components.image"] = _img_mod
+IMAGE = importlib.import_module(f"{PKG}.image")
+MANAGER = importlib.import_module(f"{PKG}.manager")
+PHOTOS = importlib.import_module(f"{PKG}.photos")
 CONST = importlib.import_module(f"{PKG}.const")
 CONTROLS = importlib.import_module(f"{PKG}.controls")
 SWITCH = importlib.import_module(f"{PKG}.switch")
@@ -221,3 +234,60 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(any("/api-sdk/set_head_angle?" in p for p in seen))
         self.assertTrue(any("/api-sdk/set_lift_height?" in p for p in seen))
         self.assertTrue(any("/api-sdk/stop_motors?" in p for p in seen))
+
+
+class PrivatePhotoServingTests(unittest.TestCase):
+    def test_image_entity_has_no_unauthenticated_local_url(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            pdir = PHOTOS.photo_dir(tmp, SERIAL)
+            self.assertNotIn("www", pdir.parts)
+            frame = b"\xff\xd8\xff\xe0" + b"x" * 100 + b"\xff\xd9"
+            saved = PHOTOS.save_photo(pdir, frame, "manual")
+
+            hass = types.SimpleNamespace(
+                async_add_executor_job=lambda fn, *args: asyncio.sleep(0, result=fn(*args)),
+                config=types.SimpleNamespace(config_dir=tmp),
+            )
+            entry = _fake_runtime_entry()
+            entry.runtime_data.manager = types.SimpleNamespace(
+                serial=SERIAL,
+                photo_dir=pdir,
+                last_photo_error="",
+            )
+            entity = IMAGE.VectorLastPhoto(hass, entry)
+            entity.hass = hass
+            asyncio.run(entity._reload())
+            attrs = entity.extra_state_attributes
+            self.assertNotIn("url", attrs)
+            self.assertEqual(attrs["file"], saved.name)
+            self.assertEqual(attrs["reason"], "manual")
+            self.assertEqual(attrs["stored_photos"], 1)
+            self.assertNotIn("/local/", repr(attrs))
+            raw = asyncio.run(entity.async_image())
+            self.assertEqual(raw, frame)
+
+    def test_event_photo_has_no_local_url(self) -> None:
+        fired: list[tuple[str, dict]] = []
+        with tempfile.TemporaryDirectory() as tmp:
+            hass = types.SimpleNamespace(
+                config=types.SimpleNamespace(config_dir=tmp),
+                bus=types.SimpleNamespace(async_fire=lambda ev, data: fired.append((ev, data))),
+                async_add_executor_job=lambda fn, *args: asyncio.sleep(0, result=fn(*args)),
+            )
+            entry = types.SimpleNamespace(
+                entry_id="e1",
+                data={CONST.CONF_WIREPOD_URL: "http://pod:8080", CONST.CONF_SERIAL: SERIAL},
+                options={},
+            )
+            hub = types.SimpleNamespace(allowed=True, retry_now=lambda: None)
+            mgr = MANAGER.VectorManager(hass, entry, object(), hub)
+            mgr.coordinator = types.SimpleNamespace(data={"robot_state": {"asleep": False}})
+            frame = b"\xff\xd8\xff\xe0" + b"x" * 100 + b"\xff\xd9"
+            mgr._fresh_frame = mock.AsyncMock(return_value=frame)
+            path = asyncio.run(mgr._photo_inner("manual"))
+            self.assertNotIn("www", path.parts)
+            self.assertEqual(len(fired), 1)
+            ev_name, ev_data = fired[0]
+            self.assertEqual(ev_name, CONST.EVENT_PHOTO)
+            self.assertEqual(set(ev_data.keys()), {"serial", "reason", "file"})
+            self.assertNotIn("url", ev_data)
