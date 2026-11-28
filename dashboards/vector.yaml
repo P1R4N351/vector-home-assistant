@@ -1,0 +1,215 @@
+# Paste this item into the `views:` list of a Lovelace dashboard
+# (Edit dashboard -> raw configuration editor).
+#
+# Entity ids match a robot named "Vector Demo". Replace `vector_demo` with your
+# robot's slug (for example `vector_abc1`). Cards are all built-in.
+
+title: Vector
+path: vector
+icon: mdi:robot
+type: sections
+max_columns: 3
+sections:
+  - type: grid
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: tile
+            entity: switch.vector_demo_cryosleep
+            name: Cryosleep
+          - type: tile
+            entity: switch.vector_demo_quiet_mode
+            name: Quiet
+          - type: tile
+            entity: switch.vector_demo_manual_control
+            name: Manual
+          - type: tile
+            entity: switch.vector_demo_camera_allowed
+            name: Camera
+      - type: tile
+        entity: binary_sensor.vector_demo_robot_reachable
+        name: Reachable
+      - type: tile
+        entity: sensor.vector_demo_battery_voltage
+        name: Battery
+      - type: tile
+        entity: binary_sensor.vector_demo_asleep
+        name: Asleep
+      - type: tile
+        entity: binary_sensor.vector_demo_on_charger
+        name: On charger
+      - type: picture-entity
+        entity: camera.vector_demo
+        camera_view: auto
+        name: Camera
+        show_name: false
+        show_state: false
+        fit_mode: contain
+        aspect_ratio: 16x9
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Left
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_turn_left
+          - type: button
+            name: Forward
+            icon: mdi:arrow-up-bold
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_drive_forward
+          - type: button
+            name: Right
+            icon: mdi:arrow-right-bold
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_turn_right
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Dock
+            icon: mdi:home-battery
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_dock
+          - type: button
+            name: Back
+            icon: mdi:arrow-down-bold
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_drive_backward
+          - type: button
+            name: Stop
+            icon: mdi:stop
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_stop
+      - type: tile
+        entity: text.vector_demo_say
+        name: Say
+      - type: tile
+        entity: number.vector_demo_head_angle
+        name: Head angle
+      - type: tile
+        entity: number.vector_demo_lift_height
+        name: Lift height
+  - type: grid
+    cards:
+      - type: heading
+        heading: Actions & settings
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Wake word
+            icon: mdi:account-voice
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_trigger_wake_word
+          - type: button
+            name: Sleep cycle
+            icon: mdi:sleep
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_sleep
+          - type: button
+            name: Sleep
+            icon: mdi:power-sleep
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_go_to_sleep
+          - type: button
+            name: Photo
+            icon: mdi:camera
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_take_photo
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Explore
+            icon: mdi:compass
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_explore
+          - type: button
+            name: Fetch cube
+            icon: mdi:cube-outline
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_fetch_cube
+          - type: button
+            name: Listen
+            icon: mdi:music
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.vector_demo_listen_for_beat
+      - type: tile
+        entity: number.vector_demo_volume
+        name: Volume
+      - type: tile
+        entity: select.vector_demo_eye_colour
+        name: Eye colour
+      - type: tile
+        entity: light.vector_demo_face_backlight
+        name: Face backlight
+      - type: tile
+        entity: switch.vector_demo_mute_microphones
+        name: Mute mics
+      - type: tile
+        entity: switch.vector_demo_photo_on_wake
+        name: Photo on wake
+      - type: picture-entity
+        entity: image.vector_demo_last_photo
+        name: Last photo
+        show_name: true
+        show_state: false
+        fit_mode: contain
+  - type: grid
+    cards:
+      - type: heading
+        heading: Status & robot data
+      - type: entities
+        entities:
+          - sensor.vector_demo_battery_level
+          - binary_sensor.vector_demo_charging
+          - sensor.vector_demo_camera_status
+          - sensor.vector_demo_sleep_cycle
+          - binary_sensor.vector_demo_moving
+          - binary_sensor.vector_demo_animating
+          - binary_sensor.vector_demo_picked_up
+          - binary_sensor.vector_demo_being_held
+          - binary_sensor.vector_demo_back_button_pressed
+          - binary_sensor.vector_demo_edge_detected
+          - sensor.vector_demo_time_switched_on
+          - sensor.vector_demo_time_petted
+          - sensor.vector_demo_distance_driven
+          - sensor.vector_demo_wake_word_reactions
+          - sensor.vector_demo_ip_address

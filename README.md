@@ -117,6 +117,20 @@ Then add the integration under Settings → Devices & services, enter the wire-p
 (default `http://escapepod.local:8080`), and choose the robot. A sleeping robot can be added; its
 entities fill in as it answers.
 
+**Poll resilience & state restoration (`0.14.0`)**
+
+- Polling entities (`Mute microphones`, `Face backlight`, `Volume`) skip HTTP requests when the robot
+  is unreachable and enforce an 8 s poll timeout to avoid slow-update warnings.
+- `Head angle`, `Lift height`, and `Say` (`last_said`) restore their last state across restarts.
+
+## Services and Dashboard
+
+The integration registers six services under `vector_wirepod` (`say`, `drive`, `turn`, `set_head`,
+`set_lift`, and `stop`). Omit `serial` when only one Vector is configured; pass `serial` when
+targeting a specific robot in a multi-robot setup.
+
+A ready-to-paste Lovelace view is included at [`dashboards/vector.yaml`](dashboards/vector.yaml).
+
 ## Example: Cryosleep overnight
 
 ```yaml

@@ -26,6 +26,7 @@ from .const import (BATTERY_POLL_S, BATTERY_TIMEOUT_S, CONF_BATTERY_POLL_S,
 from . import hardware
 from .failover import FailoverSession
 from .manager import VectorManager
+from .services import async_register_services, async_unregister_services
 from .sleepcycle import GOING, IDLE
 from .wirepod import (CameraHub, HubConfig, WirePodError, get_battery,
                       get_quiet_mode, get_robot_state)
@@ -155,6 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manager=manager,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    async_register_services(hass)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
@@ -171,4 +173,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if manual is not None:
             await manual.shutdown()        # lets go of behavior control if it is held
         await entry.runtime_data.hub.close()
+        async_unregister_services(hass, entry.entry_id)
     return ok

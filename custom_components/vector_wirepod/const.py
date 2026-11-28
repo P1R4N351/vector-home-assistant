@@ -22,6 +22,7 @@ BATTERY_POLL_S = 60
 MIN_BATTERY_POLL_S = 15
 MAX_BATTERY_POLL_S = 3600
 BATTERY_TIMEOUT_S = 20.0
+POLL_TIMEOUT_S = 8.0
 # HA gives async_camera_image 10 s; answer well inside it.
 STILL_WAIT_S = 7.0
 STATUS_KEEPALIVE_S = 5.0

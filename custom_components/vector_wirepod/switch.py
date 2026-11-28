@@ -18,7 +18,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .camera import device_info
-from .const import CONF_SERIAL, DOMAIN, SIGNAL_RECOVERED
+from .const import CONF_SERIAL, DOMAIN, POLL_TIMEOUT_S, SIGNAL_RECOVERED
 from .cryosleep import bind_cryosleep_entity, cryosleep_displaced, guard_not_cryosleep
 from .manual_switch import manual_switches
 from .wirepod import WirePodError, get_mic_mute, set_mic_mute, set_quiet_mode
@@ -322,8 +322,13 @@ class MicMuteSwitch(SwitchEntity):
         data = self._data
         if cryosleep_displaced(data.manager) and self._muted is not None:
             return
+        coord_data = data.coordinator.data if data.coordinator is not None else None
+        if isinstance(coord_data, dict) and coord_data.get("robot_reachable") is False:
+            self._took(None)
+            return
         try:
-            self._took(await get_mic_mute(data.session, data.base_url, data.serial))
+            self._took(await get_mic_mute(
+                data.session, data.base_url, data.serial, timeout_s=POLL_TIMEOUT_S))
         except MIC_FAILURES:
             self._took(None)
 

@@ -1,13 +1,14 @@
-"""Head angle and lift height sliders for one Vector.
-
-The robot does not report either back through wire-pod, so each slider shows what it last set
-(assumed state) and nothing until it has been used.
-"""
+"""Number entities for Vector's head angle and lift height."""
 
 from __future__ import annotations
 
+import math
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import controls
 from .camera import device_info
@@ -15,12 +16,26 @@ from .const import CONF_SERIAL
 from .manual import ManualControl, ensure_control
 
 
-def manual_numbers(hass, entry: ConfigEntry) -> list[NumberEntity]:
+def _parse_restored_float(raw: str | None, low: float, high: float) -> float | None:
+    """Return finite float within [low, high] from a restored state string, or None."""
+    if not isinstance(raw, str):
+        return None
+    try:
+        val = float(raw)
+    except ValueError:
+        return None
+    if not math.isfinite(val) or not low <= val <= high:
+        return None
+    return val
+
+
+def manual_numbers(hass: HomeAssistant, entry: ConfigEntry) -> list[NumberEntity]:
+    assert hass is not None and entry is not None
     control = ensure_control(hass, entry)
     return [HeadAngleNumber(entry, control), LiftHeightNumber(entry, control)]
 
 
-class _ManualNumber(NumberEntity):
+class _ManualNumber(NumberEntity, RestoreEntity):
     _attr_has_entity_name = True
     _attr_assumed_state = True
     _attr_mode = NumberMode.SLIDER
@@ -32,8 +47,18 @@ class _ManualNumber(NumberEntity):
         self._attr_unique_id = f"{entry.data[CONF_SERIAL]}_manual_{key}"
         self._attr_device_info = device_info(entry)
 
+    def _apply_restored(self, value: float) -> None:
+        raise NotImplementedError
+
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        if self.native_value is None:
+            last = await self.async_get_last_state()
+            raw = None if last is None else getattr(last, "state", None)
+            val = _parse_restored_float(raw, float(self._attr_native_min_value),
+                                        float(self._attr_native_max_value))
+            if val is not None:
+                self._apply_restored(val)
         self.async_on_remove(self._control.add_listener(self.async_write_ha_state))
 
     @property
@@ -50,6 +75,9 @@ class HeadAngleNumber(_ManualNumber):
 
     def __init__(self, entry: ConfigEntry, control: ManualControl) -> None:
         super().__init__(entry, control, "head_angle", "Head angle")
+
+    def _apply_restored(self, value: float) -> None:
+        self._control.head_deg = value
 
     @property
     def native_value(self) -> float | None:
@@ -71,6 +99,9 @@ class LiftHeightNumber(_ManualNumber):
 
     def __init__(self, entry: ConfigEntry, control: ManualControl) -> None:
         super().__init__(entry, control, "lift_height", "Lift height")
+
+    def _apply_restored(self, value: float) -> None:
+        self._control.lift_pct = value
 
     @property
     def native_value(self) -> float | None:

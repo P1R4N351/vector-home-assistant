@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import controls
 from .camera import device_info
@@ -21,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     async_add_entities([SayText(entry, control)])
 
 
-class SayText(TextEntity):
+class SayText(TextEntity, RestoreEntity):
     _attr_has_entity_name = True
     _attr_name = "Say"
     _attr_icon = "mdi:account-voice"
@@ -37,6 +38,12 @@ class SayText(TextEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        if self._control.last_said is None:
+            last = await self.async_get_last_state()
+            attrs = getattr(last, "attributes", None) if last is not None else None
+            prev = attrs.get("last_said") if isinstance(attrs, dict) else None
+            if isinstance(prev, str) and prev.strip():
+                self._control.last_said = prev
         self.async_on_remove(self._control.add_listener(self.async_write_ha_state))
 
     @property

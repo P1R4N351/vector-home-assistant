@@ -1,0 +1,146 @@
+say:
+  name: Say
+  description: Have Vector speak text through wire-pod. Temporarily lifts Quiet mode and restores it afterwards; blocked during Cryosleep.
+  fields:
+    text:
+      name: Text
+      description: Phrase to speak (1 to 255 characters).
+      required: true
+      example: "Hello world"
+      selector:
+        text:
+    serial:
+      name: Serial
+      description: Robot ESN (optional when only one Vector is configured).
+      required: false
+      example: "0dd1cafe"
+      selector:
+        text:
+
+drive:
+  name: Drive
+  description: Drive Vector straight for a fixed distance at DEFAULT behavior priority.
+  fields:
+    distance_mm:
+      name: Distance
+      description: Distance in millimetres (-150 to 600).
+      required: true
+      example: 100
+      selector:
+        number:
+          min: -150
+          max: 600
+          step: 10
+          unit_of_measurement: mm
+    speed_mmps:
+      name: Speed
+      description: Speed in mm/s (20 to 160).
+      required: false
+      default: 75
+      example: 75
+      selector:
+        number:
+          min: 20
+          max: 160
+          step: 5
+          unit_of_measurement: mm/s
+    serial:
+      name: Serial
+      description: Robot ESN (optional when only one Vector is configured).
+      required: false
+      example: "0dd1cafe"
+      selector:
+        text:
+
+turn:
+  name: Turn
+  description: Turn Vector in place by an angle in degrees at DEFAULT behavior priority.
+  fields:
+    angle_deg:
+      name: Angle
+      description: Turn angle in degrees (-360 to 360; positive turns left).
+      required: true
+      example: 45
+      selector:
+        number:
+          min: -360
+          max: 360
+          step: 5
+          unit_of_measurement: "°"
+    speed_dps:
+      name: Speed
+      description: Turn speed in degrees/s (15 to 180).
+      required: false
+      default: 90
+      example: 90
+      selector:
+        number:
+          min: 15
+          max: 180
+          step: 5
+          unit_of_measurement: "°/s"
+    serial:
+      name: Serial
+      description: Robot ESN (optional when only one Vector is configured).
+      required: false
+      example: "0dd1cafe"
+      selector:
+        text:
+
+set_head:
+  name: Set head angle
+  description: Move Vector's head to a specific angle (-22° to 45°).
+  fields:
+    angle_deg:
+      name: Angle
+      description: Target head angle in degrees (-22 to 45).
+      required: true
+      example: 15
+      selector:
+        number:
+          min: -22
+          max: 45
+          step: 1
+          unit_of_measurement: "°"
+    serial:
+      name: Serial
+      description: Robot ESN (optional when only one Vector is configured).
+      required: false
+      example: "0dd1cafe"
+      selector:
+        text:
+
+set_lift:
+  name: Set lift height
+  description: Move Vector's lift to a percentage height (0% to 100%).
+  fields:
+    height_pct:
+      name: Height
+      description: Target lift height percentage (0 to 100).
+      required: true
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+    serial:
+      name: Serial
+      description: Robot ESN (optional when only one Vector is configured).
+      required: false
+      example: "0dd1cafe"
+      selector:
+        text:
+
+stop:
+  name: Stop
+  description: Stop Vector's motors and release any manual behavior control hold.
+  fields:
+    serial:
+      name: Serial
+      description: Robot ESN (optional when only one Vector is configured).
+      required: false
+      example: "0dd1cafe"
+      selector:
+        text:

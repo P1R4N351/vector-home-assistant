@@ -116,11 +116,17 @@ MUTATIONS = [
     ("number recovery drops callback decorator", "number.py", "        if getattr(self, \"hass\", None) is not None:\n            @callback\n            def _on_recovered", "        if getattr(self, \"hass\", None) is not None:\n            def _on_recovered", True),
     ("mic switch recovery drops callback decorator", "switch.py", "        if getattr(self, \"hass\", None) is not None:\n            @callback\n            def _on_recovered", "        if getattr(self, \"hass\", None) is not None:\n            def _on_recovered", True),
     ("extras recovery drops callback decorator", "manual.py", "        @callback\n        def _on_recovered() -> None:", "        def _on_recovered() -> None:", True),
+    ("mic switch polls unreachable robot", "switch.py", "        if isinstance(coord_data, dict) and coord_data.get(\"robot_reachable\") is False:\n            self._took(None)\n            return", "        if False:\n            self._took(None)\n            return", True),
+    ("backlight polls unreachable robot", "light.py", "        if isinstance(coord_data, dict) and coord_data.get(\"robot_reachable\") is False:\n            self._level = None\n            return", "        if False:\n            self._level = None\n            return", True),
+    ("poll timeout exceeds 10s warning", "const.py", "POLL_TIMEOUT_S = 8.0", "POLL_TIMEOUT_S = 15.0", True),
+    ("manual number ignores restored state", "manual_numbers.py", "            if val is not None:\n                self._apply_restored(val)", "            if False:\n                self._apply_restored(val)", True),
+    ("say text ignores restored last_said", "text.py", "            if isinstance(prev, str) and prev.strip():\n                self._control.last_said = prev", "            if False:\n                self._control.last_said = prev", True),
+    ("service accepts ambiguous multi-robot call", "services.py", "    if len(entries) == 1:\n        return entries[0]", "    if entries:\n        return entries[0]", True),
 ]
 
 
 def run_tests(root: pathlib.Path) -> bool:
-    proc = subprocess.run([sys.executable, "-m", "unittest", "test_sleep_photos", "test_v050", "test_v060", "test_v061", "test_v070", "test_v080", "test_v090", "test_v0100", "test_v0110", "test_v0111", "test_v0120", "test_v0130"],
+    proc = subprocess.run([sys.executable, "-m", "unittest", "test_sleep_photos", "test_v050", "test_v060", "test_v061", "test_v070", "test_v080", "test_v090", "test_v0100", "test_v0110", "test_v0111", "test_v0120", "test_v0130", "test_v0140"],
                           cwd=root / "tests", capture_output=True, text=True, timeout=300)
     return proc.returncode == 0
 

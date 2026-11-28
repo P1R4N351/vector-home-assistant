@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .camera import device_info
-from .const import CONF_SERIAL, SIGNAL_RECOVERED
+from .const import CONF_SERIAL, POLL_TIMEOUT_S, SIGNAL_RECOVERED
 from .cryosleep import bind_cryosleep_entity, cryosleep_displaced, guard_not_cryosleep
 from .manual_numbers import manual_numbers
 from .wirepod import (
@@ -119,7 +119,7 @@ class VectorVolumeNumber(NumberEntity):
             self._level = None
             return
         try:
-            vol = await get_volume(data.session, data.base_url, data.serial)
+            vol = await get_volume(data.session, data.base_url, data.serial, timeout_s=POLL_TIMEOUT_S)
         except FAILURES:
             self._level = None
             return

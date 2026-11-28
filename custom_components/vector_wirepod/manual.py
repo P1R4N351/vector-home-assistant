@@ -69,6 +69,10 @@ class ManualControl:
         for callback in list(self._listeners)[:MAX_LISTENERS]:
             callback()
 
+    def notify(self) -> None:
+        """Notify listening manual-control entities of updated local state."""
+        self._notify()
+
     def displaced(self) -> bool:
         return cryosleep_displaced(self.manager)
 
